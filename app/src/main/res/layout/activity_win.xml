@@ -25,7 +25,8 @@
             android:text="You did it!!"
             android:id="@+id/textView"
             android:layout_weight="9"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textColor="@color/white" />
     </LinearLayout>
 
     <LinearLayout

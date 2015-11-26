@@ -14,7 +14,34 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"></LinearLayout>
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="MAIN MENU"
+                android:id="@+id/textView6"
+                android:textColor="@color/white"
+                android:textIsSelectable="false"
+                android:textSize="36dp"
+                android:textStyle="bold|italic"
+                android:textAlignment="center" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/imageView2"
+                android:layout_weight="0" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
@@ -27,40 +54,16 @@
             android:textAlignment="center"
             android:textColor="@color/white" />
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"></LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"></LinearLayout>
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Swipe down to view highscore"
+            android:text="Swipe left for extra options"
             android:id="@+id/textView3"
-            android:layout_gravity="center"
             android:layout_weight="1"
             android:textAlignment="center"
             android:textColor="@color/white" />
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"></LinearLayout>
     </LinearLayout>
+
 </LinearLayout>

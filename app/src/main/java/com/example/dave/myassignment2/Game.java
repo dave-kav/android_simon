@@ -2,6 +2,7 @@ package com.example.dave.myassignment2;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -9,7 +10,6 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Random;
@@ -29,7 +29,7 @@ public class Game extends Activity {
     private int highScore;
     private boolean playButtonLock;
     private boolean colorButtonLock;
-    private final int MAX_GAMES = 20;
+    private int maxGames;
     private Button topLeft;
     private Button topRight;
     private Button bottomLeft;
@@ -43,11 +43,17 @@ public class Game extends Activity {
     private Runnable countdown1;
     private Runnable countdown0;
     private final Handler UIHandler = new Handler();
+    private boolean trackScore;
+    private boolean playSounds;
+    private int countDownSound = R.raw.countdown;
+    private int correct = R.raw.correct;
+    private int wrong = R.raw.wrong;
+    private MediaPlayer mp;
 
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.game);
+        maxGames = getIntent().getIntExtra("maxGames", 5);
         topLeft = (Button) findViewById(R.id.top_left);
         topRight = (Button) findViewById(R.id.top_right);
         bottomLeft = (Button) findViewById(R.id.bottom_left);
@@ -56,19 +62,20 @@ public class Game extends Activity {
         levelText = (TextView) findViewById(R.id.level);
         guesses = (TextView) findViewById(R.id.guess);
         firstBar = (ProgressBar) findViewById(R.id.firstBar);
-        //secondBar = (ProgressBar) findViewById(R.id.secondBar);
         count = 2;
         level = 1;
         index = 0;
         input_index = 0;
-        pattern = new int[MAX_GAMES];
-        input_pattern = new int[MAX_GAMES];
+        pattern = new int[maxGames];
+        input_pattern = new int[maxGames];
         playButtonLock = false;
         colorButtonLock = true;
         random = new Random();
         highScore = getIntent().getIntExtra("highScore", -1);
         levelText.setText(level + "");
         guesses.setText("\t" + input_index + "/" + count);
+        trackScore = getIntent().getBooleanExtra("trackScore", true);
+        playSounds = getIntent().getBooleanExtra("playSounds", true);
 
         statusButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -99,8 +106,7 @@ public class Game extends Activity {
         bottomLeft.setBackgroundResource(R.color.bottomLeftDark);
         bottomRight.setBackgroundResource(R.color.bottomRightDark);
         firstBar.setVisibility(View.VISIBLE);
-        firstBar.setMax(MAX_GAMES);
-       // secondBar.setVisibility(View.VISIBLE);
+        firstBar.setMax(maxGames);
         //generate pattern
         for (int i = index; i < count; i++) {
             pattern[i] = random.nextInt(4);
@@ -116,7 +122,7 @@ public class Game extends Activity {
                         public void run() {
                             flash(pattern[p]);
                         }
-                    }, 500);
+                    }, 5);
                 }
             },500);
 
@@ -196,17 +202,16 @@ public class Game extends Activity {
      */
     private void flash(int i) {
         final int s = i;
-//        for(int i = 0; i <count; i++) {
         new Handler().postDelayed(new Runnable() {
             public void run() {
                 switch (s) {
                     case 0:
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500
+                        );
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
@@ -221,11 +226,10 @@ public class Game extends Activity {
                         break;
                     case 1:
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
@@ -240,11 +244,10 @@ public class Game extends Activity {
                         break;
                     case 2:
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
@@ -259,7 +262,7 @@ public class Game extends Activity {
                         break;
                     case 3:
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -280,14 +283,12 @@ public class Game extends Activity {
                 }
             }
         }, 100);
-
-//        }
     }
 
     /**
      * checks if user had input required number of commands
      */
-    public void checkDone() {
+    private void checkDone() {
         if (input_index == count)
             done();
     }
@@ -295,58 +296,105 @@ public class Game extends Activity {
     /**
      * moves on to next level/shows win or lose
      */
-    public void done() {
+    private void done() {
         for (int i = 0; i < count; i++) {
             if (input_pattern[i] != pattern[i]) {
                 statusButton.setImageResource(R.drawable.wrong);
-                if(level > highScore) {
-                    highScore = level - 1;
-                    try {
-                        FileOutputStream fileOut = openFileOutput("simon_high_score.txt", MODE_PRIVATE);
-                        OutputStreamWriter outputWriter=new OutputStreamWriter(fileOut);
-                        outputWriter.write(highScore + "");
-                        outputWriter.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                playSound(wrong);
+                if(trackScore) {
+                    if (level > highScore) {
+                        highScore = level - 1;
+                        try {
+                            FileOutputStream fileOut = openFileOutput("simon_high_score.txt", MODE_PRIVATE);
+                            OutputStreamWriter outputWriter = new OutputStreamWriter(fileOut);
+                            outputWriter.write(highScore + "");
+                            outputWriter.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
                 reset();
                 return;
             }
         }
-        if (count == MAX_GAMES) {
+        if (count == maxGames) {
             Intent winIntent = new Intent(this, Win.class);
-            winIntent.putExtra("highScore", highScore);
+            if (highScore < maxGames) {
+                if (maxGames == 5)
+                    highScore = 5;
+                else if (maxGames == 10)
+                    highScore = 10;
+                else
+                    highScore = 20;
+
+                if(trackScore) {
+                    try {
+                        FileOutputStream fileOut = openFileOutput("simon_high_score.txt", MODE_PRIVATE);
+                        OutputStreamWriter outputWriter = new OutputStreamWriter(fileOut);
+                        outputWriter.write(highScore + "");
+                        outputWriter.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            winIntent.putExtra("highScore", highScore).putExtra("trackScore", trackScore).putExtra("playSounds", playSounds);
             startActivity(winIntent);
             finish();
         }
-        statusButton.setImageResource(R.drawable.tick);
-        colorButtonLock = true;
-        playButtonLock = false;
-        index = count;
-        count++;
-        input_index = 0;
-        guesses.setText("\t" + input_index + "/" + count);
-        firstBar.setProgress(count - 1);
-        firstBar.setSecondaryProgress(count);
-        level++;
-        levelText.setText(level + "");
+        else {
+            statusButton.setImageResource(R.drawable.tick);
+            playSound(correct);
+            colorButtonLock = true;
+            index = count;
+            count++;
+            input_index = 0;
+            guesses.setText("\t" + input_index + "/" + count);
+            firstBar.setProgress(count - 1);
+            firstBar.setSecondaryProgress(count);
+            level++;
+            levelText.setText(level + "");
+            UIHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    playButtonLock = true;
+                    playAgain();
+                }
+            }, 2000);
+        }
     }
 
+    private void playAgain() {
+        countdown();
+        UIHandler.postDelayed(countdown3, 0);
+        UIHandler.postDelayed(countdown2, 1000);
+        UIHandler.postDelayed(countdown1, 2000);
+        UIHandler.postDelayed(countdown0, 3000);
+        UIHandler.postDelayed(new Runnable() {
+            public void run() {
+                game();
+            }
+        }, 1500);
+        colorButtonLock = false;
+    }
     /**
      * reset game variable on lose of play again
      */
-    public void reset() {
+    private void reset() {
         count = 2;
         index = 0;
         input_index = 0;
         level = 1;
-        pattern = new int[MAX_GAMES];
-        input_pattern = new int[MAX_GAMES];
+        pattern = new int[maxGames];
+        input_pattern = new int[maxGames];
         playButtonLock = false;
         colorButtonLock = true;
         guesses.setText("\t" + input_index + "/" + count);
         levelText.setText(level + "");
+        firstBar.setProgress(count - 1);
+        firstBar.setSecondaryProgress(count);
         firstBar.setVisibility(View.GONE);
     }
 
@@ -354,14 +402,15 @@ public class Game extends Activity {
      * used in countdown
      * @param d - image to be shown
      */
-    public void changeButton(int d) {
+    private void changeButton(int d) {
         statusButton.setImageResource(d);
     }
 
     /**
      * Create threads to display countdown on playbutton
      */
-    public void countdown() {
+    private void countdown() {
+        playSound(countDownSound);
         countdown3 = new Runnable() {
             @Override
             public void run() {
@@ -391,21 +440,32 @@ public class Game extends Activity {
         };
     }
 
+    public void playSound(int soundID) {
+        if(playSounds) {
+            mp = MediaPlayer.create(this, soundID);
+            mp.start();
+        }
+    }
+
     @Override
     public void onBackPressed() {
-        if (level > highScore) {
-            highScore = level - 1;
-            try {
-                FileOutputStream fileOut=openFileOutput("simon_high_score.txt", MODE_PRIVATE);
-                OutputStreamWriter outputWriter=new OutputStreamWriter(fileOut);
-                outputWriter.write(highScore + "");
-                outputWriter.close();
-            } catch (Exception e) {
-                e.printStackTrace();
+        if (trackScore) {
+            if (level > highScore) {
+                highScore = level - 1;
+                try {
+                    FileOutputStream fileOut = openFileOutput("simon_high_score.txt", MODE_PRIVATE);
+                    OutputStreamWriter outputWriter = new OutputStreamWriter(fileOut);
+                    outputWriter.write(highScore + "");
+                    outputWriter.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
         Intent back = new Intent(this, MainMenu.class);
         back.putExtra("highScore", highScore);
+        if(mp!=null)
+            mp.stop();
         startActivity(back);
         finish();
     }
